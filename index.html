@@ -3,12 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>INFAK - Generátor účetních dokladů</title>
+    <title>INFAST</title>
     <link rel="stylesheet" href="styles.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 </head>
 <body>
     <!-- Animated Background -->
@@ -22,213 +21,85 @@
         <!-- Home Screen -->
         <div id="homeScreen" class="screen active">
             <div class="home-content">
-                <h1 class="logo">INFAK</h1>
-                <p class="tagline">Generátor účetních dokladů</p>
-                
-                <div class="document-types">
-                    <button class="doc-button" data-type="faktura">
-                        <div class="doc-icon">📄</div>
-                        <div class="doc-name">Faktura</div>
-                        <div class="doc-desc">Vydaná/přijatá faktura</div>
-                    </button>
-                    
-                    <button class="doc-button" data-type="zalohova">
-                        <div class="doc-icon">📋</div>
-                        <div class="doc-name">Zálohová faktura</div>
-                        <div class="doc-desc">Záloha na plnění</div>
-                    </button>
-                    
-                    <button class="doc-button" data-type="pokladni">
-                        <div class="doc-icon">💰</div>
-                        <div class="doc-name">Pokladní doklad</div>
-                        <div class="doc-desc">Příjmový/výdajový</div>
-                    </button>
-                    
-                    <button class="doc-button" data-type="zjednoduseny">
-                        <div class="doc-icon">🧾</div>
-                        <div class="doc-name">Zjednodušený doklad</div>
-                        <div class="doc-desc">Paragon</div>
-                    </button>
-                    
-                    <button class="doc-button" data-type="dodaci">
-                        <div class="doc-icon">📦</div>
-                        <div class="doc-name">Dodací list</div>
-                        <div class="doc-desc">Potvrzení dodávky</div>
-                    </button>
-                </div>
+                <h1 class="logo">INFAST</h1>
+                <p class="tagline">Hra reakcí pro dva hráče</p>
+                <button id="startButton" class="start-button">
+                    <span class="button-text">Začít</span>
+                    <svg class="button-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M7 4L13 10L7 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
             </div>
         </div>
 
-        <!-- Form Screen -->
-        <div id="formScreen" class="screen">
-            <div class="form-header">
-                <button id="backButton" class="back-button">← Zpět</button>
-                <h2 id="formTitle" class="form-title">Faktura</h2>
-            </div>
+        <!-- Game Screen -->
+        <div id="gameScreen" class="screen">
+            <div class="game-content">
+                <!-- Timer Display -->
+                <div class="timer-section">
+                    <div id="timerDisplay" class="timer-display">10.000</div>
+                    <div id="timerStatus" class="timer-status">Připravte se</div>
+                    <div class="timer-ring">
+                        <svg class="timer-svg" viewBox="0 0 200 200">
+                            <circle class="timer-circle-bg" cx="100" cy="100" r="95"></circle>
+                            <circle id="timerCircle" class="timer-circle-progress" cx="100" cy="100" r="95"></circle>
+                        </svg>
+                    </div>
+                </div>
 
-            <div class="form-container">
-                <form id="documentForm">
-                    <!-- Document Info -->
-                    <div class="form-section">
-                        <h3 class="section-title">Informace o dokladu</h3>
-                        <div class="form-grid">
-                            <div class="form-group">
-                                <label for="docNumber">Číslo dokladu *</label>
-                                <input type="text" id="docNumber" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="docDate">Datum vystavení *</label>
-                                <input type="date" id="docDate" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="dueDate">Datum splatnosti *</label>
-                                <input type="date" id="dueDate" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="taxableDate">Datum zdanitelného plnění</label>
-                                <input type="date" id="taxableDate">
-                            </div>
+                <!-- Players Section -->
+                <div class="players-section">
+                    <div class="player-card" id="player1Card">
+                        <div class="player-indicator"></div>
+                        <div class="player-name">Hráč 1</div>
+                        <div class="player-key" id="player1Key">SPACE</div>
+                        <div class="player-stats">
+                            <div class="stat-value" id="player1Time">—</div>
+                            <div class="stat-label">čas reakce</div>
                         </div>
+                        <div id="player1Status" class="player-status">připraven</div>
                     </div>
 
-                    <!-- Seller Info -->
-                    <div class="form-section">
-                        <h3 class="section-title">Dodavatel (Prodávající)</h3>
-                        <div class="form-grid">
-                            <div class="form-group full">
-                                <label for="sellerName">Název společnosti *</label>
-                                <input type="text" id="sellerName" required>
-                            </div>
-                            <div class="form-group full">
-                                <label for="sellerAddress">Adresa *</label>
-                                <input type="text" id="sellerAddress" placeholder="Ulice a číslo" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="sellerCity">Město *</label>
-                                <input type="text" id="sellerCity" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="sellerZip">PSČ *</label>
-                                <input type="text" id="sellerZip" placeholder="123 45" maxlength="6" pattern="[0-9]{3}\s?[0-9]{2}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="sellerICO">IČO *</label>
-                                <input type="text" id="sellerICO" placeholder="12345678" maxlength="8" pattern="[0-9]{8}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="sellerDIC">DIČ</label>
-                                <input type="text" id="sellerDIC" placeholder="CZ12345678" maxlength="12" pattern="CZ[0-9]{8,10}">
-                            </div>
-                            <div class="form-group">
-                                <label for="sellerPhone">Telefon</label>
-                                <input type="tel" id="sellerPhone" placeholder="+420 123 456 789" pattern="[\+]?[0-9\s]{9,20}">
-                            </div>
-                            <div class="form-group">
-                                <label for="sellerEmail">Email</label>
-                                <input type="email" id="sellerEmail" placeholder="info@firma.cz">
-                            </div>
-                            <div class="form-group full">
-                                <label for="sellerBank">Bankovní spojení</label>
-                                <input type="text" id="sellerBank" placeholder="123456789/0100">
-                            </div>
+                    <div class="player-card" id="player2Card">
+                        <div class="player-indicator"></div>
+                        <div class="player-name">Hráč 2</div>
+                        <div class="player-key" id="player2Key">ENTER</div>
+                        <div class="player-stats">
+                            <div class="stat-value" id="player2Time">—</div>
+                            <div class="stat-label">čas reakce</div>
                         </div>
+                        <div id="player2Status" class="player-status">připraven</div>
                     </div>
-
-                    <!-- Buyer Info -->
-                    <div class="form-section">
-                        <h3 class="section-title">Odběratel (Kupující)</h3>
-                        <div class="form-grid">
-                            <div class="form-group full">
-                                <label for="buyerName">Název společnosti / Jméno *</label>
-                                <input type="text" id="buyerName" required>
-                            </div>
-                            <div class="form-group full">
-                                <label for="buyerAddress">Adresa *</label>
-                                <input type="text" id="buyerAddress" placeholder="Ulice a číslo" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="buyerCity">Město *</label>
-                                <input type="text" id="buyerCity" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="buyerZip">PSČ *</label>
-                                <input type="text" id="buyerZip" placeholder="123 45" maxlength="6" pattern="[0-9]{3}\s?[0-9]{2}" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="buyerICO">IČO</label>
-                                <input type="text" id="buyerICO" placeholder="12345678" maxlength="8" pattern="[0-9]{8}">
-                            </div>
-                            <div class="form-group">
-                                <label for="buyerDIC">DIČ</label>
-                                <input type="text" id="buyerDIC" placeholder="CZ12345678" maxlength="12" pattern="CZ[0-9]{8,10}">
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Items -->
-                    <div class="form-section">
-                        <h3 class="section-title">Položky</h3>
-                        <div id="itemsContainer"></div>
-                        <button type="button" id="addItemButton" class="add-button">+ Přidat položku</button>
-                    </div>
-
-                    <!-- Totals -->
-                    <div class="form-section totals-section">
-                        <div class="totals-grid">
-                            <div class="total-row">
-                                <span>Celkem bez DPH:</span>
-                                <span id="totalWithoutVAT" class="total-value">0 Kč</span>
-                            </div>
-                            <div class="total-row">
-                                <span>DPH 21%:</span>
-                                <span id="totalVAT" class="total-value">0 Kč</span>
-                            </div>
-                            <div class="total-row final">
-                                <span>Celkem k úhradě:</span>
-                                <span id="totalWithVAT" class="total-value">0 Kč</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Notes -->
-                    <div class="form-section">
-                        <h3 class="section-title">Poznámka</h3>
-                        <div class="form-group full">
-                            <textarea id="notes" rows="3" placeholder="Volitelná poznámka k dokladu..."></textarea>
-                        </div>
-                    </div>
-
-                    <!-- Submit Button -->
-                    <div class="form-actions">
-                        <button type="submit" class="submit-button">
-                            <span class="button-text">Vygenerovat PDF</span>
-                            <svg class="button-arrow" width="20" height="20" viewBox="0 0 20 20" fill="none">
-                                <path d="M7 4L13 10L7 16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                            </svg>
-                        </button>
-                    </div>
-                </form>
-            </div>
-        </div>
-
-        <!-- Preview Screen -->
-        <div id="previewScreen" class="screen">
-            <div class="preview-header">
-                <button id="previewBackButton" class="back-button">← Zpět k úpravám</button>
-                <div class="preview-actions">
-                    <button id="screenshotButton" class="action-button">
-                        📸 Stáhnout jako obrázek
-                    </button>
                 </div>
             </div>
-            
-            <div class="document-container">
-                <div class="document-paper"></div>
+
+            <!-- Result Modal -->
+            <div id="resultModal" class="result-modal">
+                <div class="result-content">
+                    <div class="result-close" id="resultClose">×</div>
+                    <h2 id="resultTitle" class="result-title"></h2>
+                    <div class="result-stats">
+                        <div class="result-player">
+                            <div class="result-player-name">Hráč 1</div>
+                            <div id="resultPlayer1Time" class="result-time">—</div>
+                            <div id="resultPlayer1Score" class="result-score">—</div>
+                        </div>
+                        <div class="result-player">
+                            <div class="result-player-name">Hráč 2</div>
+                            <div id="resultPlayer2Time" class="result-time">—</div>
+                            <div id="resultPlayer2Score" class="result-score">—</div>
+                        </div>
+                    </div>
+                    <div id="resultDifference" class="result-difference"></div>
+                    <div class="result-buttons">
+                        <button id="playAgainButton" class="result-button primary">Znovu</button>
+                        <button id="homeButton" class="result-button secondary">Domů</button>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <script src="https://html2canvas.hertzen.com/dist/html2canvas.min.js"></script>
-    <script src="app.js"></script>
+    <script src="game.js"></script>
 </body>
 </html>
