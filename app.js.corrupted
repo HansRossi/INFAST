@@ -1,0 +1,1572 @@
+// ========================================// State
+
+// INFAST - PROFESSIONAL ACCOUNTING DOCUMENT GENERATORlet currentDocType = '';
+
+// Full-stack Czech accounting systemlet itemCounter = 1;
+
+// ========================================
+
+// Document type names
+
+// Global stateconst docTypeNames = {
+
+let currentDocType = '';    faktura: 'FAKTURA',
+
+let itemCounter = 1;    zalohova: 'ZÁLOHOVÁ FAKTURA',
+
+    pokladni: 'POKLADNÍ DOKLAD',
+
+// Document type configurations with unique logic    zjednoduseny: 'ZJEDNODUŠENÝ DAŇOVÝ DOKLAD',
+
+const docTypeNames = {    dodaci: 'DODACÍ LIST'
+
+    fakturaVydana: 'FAKTURA VYDANÁ',};
+
+    fakturaPrijata: 'FAKTURA PŘIJATÁ',
+
+    zalohova: 'ZÁLOHOVÁ FAKTURA',// Field configurations for each document type
+
+    dobropis: 'DOBROPIS',const docTypeConfig = {
+
+    objednavka: 'OBJEDNÁVKA',    faktura: {
+
+    dodaci: 'DODACÍ LIST'        showBuyerDetails: true,
+
+};        showPrices: true,
+
+        showVAT: true,
+
+// Field configurations for each document type        showBankAccount: true,
+
+const docTypeConfig = {        showPaymentMethod: true,
+
+    fakturaVydana: {        additionalFields: []
+
+        showBuyerDetails: true,    },
+
+        showPrices: true,    zalohova: {
+
+        showVAT: true,        showBuyerDetails: true,
+
+        showBankAccount: true,        showPrices: true,
+
+        showPaymentMethod: true,        showVAT: true,
+
+        showDueDate: true,        showBankAccount: true,
+
+        allowNegativePrices: false,        showPaymentMethod: true,
+
+        requireSupplierInvoiceNumber: false,        additionalFields: ['advancePercent']
+
+        additionalFields: [],    },
+
+        description: 'Faktura vydaná slouží jako daňový doklad pro odběratele s plnou specifikací DPH.'    pokladni: {
+
+    },        showBuyerDetails: false,
+
+    fakturaPrijata: {        showPrices: true,
+
+        showBuyerDetails: true,        showVAT: true,
+
+        showPrices: true,        showBankAccount: false,
+
+        showVAT: true,        showPaymentMethod: true,
+
+        showBankAccount: true,        additionalFields: []
+
+        showPaymentMethod: true,    },
+
+        showDueDate: true,    zjednoduseny: {
+
+        allowNegativePrices: false,        showBuyerDetails: false,
+
+        requireSupplierInvoiceNumber: true,        showPrices: true,
+
+        additionalFields: ['supplierInvoiceNumber', 'paymentReference'],        showVAT: true,
+
+        description: 'Faktura přijatá eviduje závazky vůči dodavateli včetně čísla faktury dodavatele.'        showBankAccount: false,
+
+    },        showPaymentMethod: true,
+
+    zalohova: {        additionalFields: []
+
+        showBuyerDetails: true,    },
+
+        showPrices: true,    dodaci: {
+
+        showVAT: true,        showBuyerDetails: true,
+
+        showBankAccount: true,        showPrices: false,
+
+        showPaymentMethod: true,        showVAT: false,
+
+        showDueDate: true,        showBankAccount: false,
+
+        allowNegativePrices: false,        showPaymentMethod: false,
+
+        requireSupplierInvoiceNumber: false,        additionalFields: []
+
+        additionalFields: ['advancePercent'],    }
+
+        description: 'Zálohová faktura požaduje platbu zálohy před plněním, typicky určitý % z celkové částky.'};
+
+    },
+
+    dobropis: {// Initialize
+
+        showBuyerDetails: true,document.addEventListener('DOMContentLoaded', () => {
+
+        showPrices: true,    createStars();
+
+        showVAT: true,    setupEventListeners();
+
+        showBankAccount: true,    setupInputValidation();
+
+        showPaymentMethod: false,    setDefaultDates();
+
+        showDueDate: false,});
+
+        allowNegativePrices: true,
+
+        requireSupplierInvoiceNumber: false,// Event listeners
+
+        additionalFields: ['originalInvoiceNumber'],function setupEventListeners() {
+
+        description: 'Dobropis je opravný daňový doklad ke stornování nebo snížení původní faktury.'    // Document type buttons
+
+    },    document.querySelectorAll('.doc-button').forEach(button => {
+
+    objednavka: {        button.addEventListener('click', () => {
+
+        showBuyerDetails: true,            currentDocType = button.dataset.type;
+
+        showPrices: true,            showFormScreen();
+
+        showVAT: false,        });
+
+        showBankAccount: false,    });
+
+        showPaymentMethod: true,
+
+        showDueDate: true,    // Navigation
+
+        allowNegativePrices: false,    document.getElementById('backButton').addEventListener('click', showHomeScreen);
+
+        requireSupplierInvoiceNumber: false,    document.getElementById('previewBackButton').addEventListener('click', showFormScreen);
+
+        additionalFields: ['deliveryDate'],
+
+        description: 'Objednávka je závazný požadavek na dodání zboží nebo služeb, může být bez cen.'    // Form submission
+
+    },    document.getElementById('documentForm').addEventListener('submit', (e) => {
+
+    dodaci: {        e.preventDefault();
+
+        showBuyerDetails: true,        generateDocument();
+
+        showPrices: false,    });
+
+        showVAT: false,
+
+        showBankAccount: false,    // Screenshot button
+
+        showPaymentMethod: false,    document.getElementById('screenshotButton').addEventListener('click', takeScreenshot);
+
+        showDueDate: false,
+
+        allowNegativePrices: false,    // Dynamic items
+
+        requireSupplierInvoiceNumber: false,    document.getElementById('addItemButton').addEventListener('click', addItem);
+
+        additionalFields: ['deliveryDate'],}
+
+        description: 'Dodací list potvrzuje předání zboží bez finančních údajů, pouze seznam položek.'
+
+    }// Screenshot function
+
+};async function takeScreenshot() {
+
+    const button = document.getElementById('screenshotButton');
+
+// ========================================    const originalText = button.textContent;
+
+// INITIALIZATION    button.textContent = 'Создание скриншота...';
+
+// ========================================    button.disabled = true;
+
+
+
+document.addEventListener('DOMContentLoaded', () => {    try {
+
+    createAnimatedBackground();        const documentPaper = document.querySelector('.document-paper');
+
+    setupEventListeners();        const canvas = await html2canvas(documentPaper, {
+
+    setupGlobalValidation();            scale: 2,
+
+    setDefaultDates();            backgroundColor: '#ffffff',
+
+    addItem(); // Add first item by default            logging: false,
+
+                useCORS: true
+
+    console.log('INFAST Document Generator initialized successfully');        });
+
+});
+
+        canvas.toBlob((blob) => {
+
+// ========================================            const url = URL.createObjectURL(blob);
+
+// EVENT LISTENERS            const a = document.createElement('a');
+
+// ========================================            a.href = url;
+
+            a.download = `${docTypeNames[currentDocType]}_${new Date().getTime()}.png`;
+
+function setupEventListeners() {            document.body.appendChild(a);
+
+    // Document type buttons            a.click();
+
+    document.querySelectorAll('.doc-button').forEach(button => {            document.body.removeChild(a);
+
+        button.addEventListener('click', () => {            URL.revokeObjectURL(url);
+
+            currentDocType = button.dataset.type;
+
+            showFormScreen();            button.textContent = originalText;
+
+        });            button.disabled = false;
+
+    });        });
+
+    } catch (error) {
+
+    // Navigation        console.error('Ошибка при создании скриншота:', error);
+
+    document.getElementById('backButton')?.addEventListener('click', showHomeScreen);        alert('Не удалось создать скриншот. Попробуйте сделать скриншот вручную (Cmd+Shift+4 на Mac).');
+
+    document.getElementById('previewBackButton')?.addEventListener('click', showFormScreen);        button.textContent = originalText;
+
+        button.disabled = false;
+
+    // Form submission    }
+
+    document.getElementById('documentForm').addEventListener('submit', handleFormSubmit);}
+
+
+
+    // Download as photo button// Screen navigation
+
+    document.getElementById('downloadPhotoButton')?.addEventListener('click', downloadAsPhoto);function showHomeScreen() {
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+    // Dynamic items    document.getElementById('homeScreen').classList.add('active');
+
+    document.getElementById('addItemButton').addEventListener('click', addItem);    document.getElementById('documentForm').reset();
+
+    document.querySelector('.items-container').innerHTML = '';
+
+    // Real-time total calculation    itemCounter = 1;
+
+    document.addEventListener('input', (e) => {    addItem();
+
+        if (e.target.classList.contains('item-price') ||     setDefaultDates();
+
+            e.target.classList.contains('item-qty') || }
+
+            e.target.classList.contains('item-vat')) {
+
+            calculateTotals();function showFormScreen() {
+
+        }    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+    });    document.getElementById('formScreen').classList.add('active');
+
+}    document.getElementById('formTitle').textContent = docTypeNames[currentDocType];
+
+    
+
+// ========================================    // Configure form based on document type
+
+// SCREEN NAVIGATION    configureFormForDocType();
+
+// ========================================}
+
+
+
+function showHomeScreen() {function showPreviewScreen() {
+
+    switchScreen('homeScreen');    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+    resetForm();    document.getElementById('previewScreen').classList.add('active');
+
+}}
+
+
+
+function showFormScreen() {// Configure form based on document type
+
+    switchScreen('formScreen');function configureFormForDocType() {
+
+    document.getElementById('formTitle').textContent = docTypeNames[currentDocType];    const config = docTypeConfig[currentDocType];
+
+    configureFormForDocType();    
+
+    calculateTotals();    // Buyer section
+
+}    const buyerSection = document.querySelector('.form-section:has(#buyerName)');
+
+    if (buyerSection) {
+
+function showPreviewScreen() {        buyerSection.style.display = config.showBuyerDetails ? 'block' : 'none';
+
+    switchScreen('previewScreen');    }
+
+}    
+
+    // Bank account field
+
+function switchScreen(screenId) {    const bankField = document.querySelector('.form-group:has(#sellerBankAccount)');
+
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));    if (bankField) {
+
+    document.getElementById(screenId).classList.add('active');        bankField.style.display = config.showBankAccount ? 'block' : 'none';
+
+}    }
+
+    
+
+function resetForm() {    // Payment method
+
+    document.getElementById('documentForm').reset();    const paymentField = document.querySelector('.form-group:has(#paymentMethod)');
+
+    document.getElementById('itemsContainer').innerHTML = '';    if (paymentField) {
+
+    itemCounter = 1;        paymentField.style.display = config.showPaymentMethod ? 'block' : 'none';
+
+    addItem();    }
+
+    setDefaultDates();    
+
+    clearAllValidationErrors();    // Price columns in items
+
+}    const itemsContainer = document.querySelector('.items-container');
+
+    if (config.showPrices) {
+
+// ========================================        itemsContainer.classList.remove('no-prices');
+
+// FORM CONFIGURATION    } else {
+
+// ========================================        itemsContainer.classList.add('no-prices');
+
+    }
+
+function configureFormForDocType() {    
+
+    const config = docTypeConfig[currentDocType];    // Add additional fields if needed
+
+        if (config.additionalFields.includes('advancePercent')) {
+
+    // Configure buyer section        addAdvancePercentField();
+
+    const buyerSection = document.querySelector('.form-section:has(#buyerName)');    } else {
+
+    if (buyerSection) {        removeAdvancePercentField();
+
+        buyerSection.style.display = config.showBuyerDetails ? 'block' : 'none';    }
+
+    }}
+
+    
+
+    // Configure bank account field parent// Add advance percent field for zalohova faktura
+
+    const bankInput = document.getElementById('sellerBank');function addAdvancePercentField() {
+
+    if (bankInput) {    const docInfoSection = document.querySelector('.form-section:has(#docNumber)');
+
+        const bankField = bankInput.closest('.form-group');    if (!document.getElementById('advancePercent')) {
+
+        if (bankField) {        const formGrid = docInfoSection.querySelector('.form-grid');
+
+            bankField.style.display = config.showBankAccount ? 'block' : 'none';        const advanceField = document.createElement('div');
+
+        }        advanceField.className = 'form-group';
+
+    }        advanceField.innerHTML = `
+
+                <label for="advancePercent">Procent zálohy *</label>
+
+    // Configure due date field            <input type="number" id="advancePercent" min="1" max="100" value="50" required>
+
+    const dueDateField = document.querySelector('.form-group:has(#dueDate)');        `;
+
+    if (dueDateField) {        formGrid.appendChild(advanceField);
+
+        dueDateField.style.display = config.showDueDate ? 'block' : 'none';    }
+
+        const input = dueDateField.querySelector('input');}
+
+        if (input) {
+
+            input.required = config.showDueDate;function removeAdvancePercentField() {
+
+        }    const advanceField = document.querySelector('.form-group:has(#advancePercent)');
+
+    }    if (advanceField) {
+
+            advanceField.remove();
+
+    // Configure totals section    }
+
+    const totalsSection = document.getElementById('totalsSection');}
+
+    if (totalsSection) {
+
+        totalsSection.style.display = config.showPrices ? 'block' : 'none';// Items management
+
+    }function addItem() {
+
+        const container = document.querySelector('.items-container');
+
+    // Add/remove additional fields    const config = docTypeConfig[currentDocType];
+
+    removeAllAdditionalFields();    const itemId = itemCounter++;
+
+    config.additionalFields.forEach(field => addAdditionalField(field));    
+
+        const priceFields = config.showPrices ? `
+
+    // Update form description        <div class="item-field">
+
+    updateFormDescription(config.description);            <label for="itemPrice${itemId}">Cena/ks (Kč) *</label>
+
+}            <input type="text" id="itemPrice${itemId}" class="item-price" placeholder="0.00" required>
+
+        </div>
+
+function addAdditionalField(fieldType) {        <div class="item-field">
+
+    const docInfoSection = document.querySelector('.form-section:has(#docNumber)');            <label for="itemVAT${itemId}">DPH (%) *</label>
+
+    const formGrid = docInfoSection.querySelector('.form-grid');            <select id="itemVAT${itemId}" class="item-vat" required>
+
+                    <option value="21">21%</option>
+
+    if (document.getElementById(fieldType)) return; // Already exists                <option value="15">15%</option>
+
+                    <option value="12">12%</option>
+
+    const fieldConfig = {                <option value="10">10%</option>
+
+        advancePercent: {                <option value="0">0%</option>
+
+            label: 'Procent zálohy *',            </select>
+
+            type: 'number',        </div>
+
+            placeholder: '50',    ` : '';
+
+            min: 1,    
+
+            max: 100,    const itemHTML = `
+
+            hint: 'Kolik % z celkové částky má být zaplaceno předem'        <div class="item-row" data-item-id="${itemId}">
+
+        },            <div class="item-field">
+
+        originalInvoiceNumber: {                <label for="itemName${itemId}">Název položky *</label>
+
+            label: 'Číslo původní faktury *',                <input type="text" id="itemName${itemId}" class="item-name" maxlength="100" required>
+
+            type: 'text',            </div>
+
+            placeholder: '2024001',            <div class="item-field">
+
+            hint: 'Zadejte číslo faktury, kterou tento dobropis opravuje'                <label for="itemQty${itemId}">Množství *</label>
+
+        },                <input type="text" id="itemQty${itemId}" class="item-qty" placeholder="1" required>
+
+        supplierInvoiceNumber: {            </div>
+
+            label: 'Číslo faktury dodavatele *',            ${priceFields}
+
+            type: 'text',            <div class="item-actions">
+
+            placeholder: 'FA2024001',                <button type="button" class="remove-item" onclick="removeItem(${itemId})">×</button>
+
+            hint: 'Číslo faktury dle dodavatele'            </div>
+
+        },        </div>
+
+        paymentReference: {    `;
+
+            label: 'Variabilní symbol',    
+
+            type: 'text',    container.insertAdjacentHTML('beforeend', itemHTML);
+
+            placeholder: '2024001',    setupItemValidation(itemId);
+
+            hint: 'Pro párování platby'}
+
+        },
+
+        deliveryDate: {function removeItem(itemId) {
+
+            label: 'Datum dodání',    const itemRow = document.querySelector(`[data-item-id="${itemId}"]`);
+
+            type: 'date',    if (document.querySelectorAll('.item-row').length > 1) {
+
+            hint: 'Předpokládané datum dodání'        itemRow.remove();
+
+        }    }
+
+    };}
+
+    
+
+    const config = fieldConfig[fieldType];// Validation
+
+    if (!config) return;function setupInputValidation() {
+
+        // Document number - only digits
+
+    const formGroup = document.createElement('div');    const docNumber = document.getElementById('docNumber');
+
+    formGroup.className = 'form-group';    docNumber?.addEventListener('input', (e) => {
+
+    formGroup.innerHTML = `        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 20);
+
+        <label for="${fieldType}">${config.label}</label>    });
+
+        <input 
+
+            type="${config.type}"     // IČO - 8 digits
+
+            id="${fieldType}"     const ico = document.getElementById('sellerICO');
+
+            placeholder="${config.placeholder || ''}"    ico?.addEventListener('input', (e) => {
+
+            ${config.min ? `min="${config.min}"` : ''}        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 8);
+
+            ${config.max ? `max="${config.max}"` : ''}    });
+
+            ${config.label.includes('*') ? 'required' : ''}
+
+        >    const buyerIco = document.getElementById('buyerICO');
+
+        ${config.hint ? `<small class="field-hint">${config.hint}</small>` : ''}    buyerIco?.addEventListener('input', (e) => {
+
+    `;        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 8);
+
+        });
+
+    formGrid.appendChild(formGroup);
+
+}    // DIČ - CZ + numbers
+
+    const dic = document.getElementById('sellerDIC');
+
+function removeAllAdditionalFields() {    dic?.addEventListener('input', (e) => {
+
+    const additionalFieldIds = [        let value = e.target.value.toUpperCase().replace(/[^CZ0-9]/g, '');
+
+        'advancePercent',        if (value && !value.startsWith('CZ')) {
+
+        'originalInvoiceNumber',            value = 'CZ' + value.replace(/CZ/g, '');
+
+        'supplierInvoiceNumber',        }
+
+        'paymentReference',        e.target.value = value.slice(0, 12);
+
+        'deliveryDate'    });
+
+    ];
+
+        const buyerDic = document.getElementById('buyerDIC');
+
+    additionalFieldIds.forEach(id => {    buyerDic?.addEventListener('input', (e) => {
+
+        const field = document.getElementById(id);        let value = e.target.value.toUpperCase().replace(/[^CZ0-9]/g, '');
+
+        if (field) {        if (value && !value.startsWith('CZ')) {
+
+            field.closest('.form-group').remove();            value = 'CZ' + value.replace(/CZ/g, '');
+
+        }        }
+
+    });        e.target.value = value.slice(0, 12);
+
+}    });
+
+
+
+function updateFormDescription(description) {    // PSČ - format XXX XX
+
+    let descEl = document.querySelector('.form-description');    const psc = document.getElementById('sellerPSC');
+
+        psc?.addEventListener('input', (e) => {
+
+    if (!descEl) {        let value = e.target.value.replace(/\D/g, '');
+
+        descEl = document.createElement('p');        if (value.length > 3) {
+
+        descEl.className = 'form-description';            value = value.slice(0, 3) + ' ' + value.slice(3, 5);
+
+        const formHeader = document.querySelector('.form-header');        }
+
+        formHeader.appendChild(descEl);        e.target.value = value;
+
+    }    });
+
+    
+
+    descEl.textContent = description;    const buyerPsc = document.getElementById('buyerPSC');
+
+}    buyerPsc?.addEventListener('input', (e) => {
+
+        let value = e.target.value.replace(/\D/g, '');
+
+// ========================================        if (value.length > 3) {
+
+// ITEMS MANAGEMENT            value = value.slice(0, 3) + ' ' + value.slice(3, 5);
+
+// ========================================        }
+
+        e.target.value = value;
+
+function addItem() {    });
+
+    const container = document.getElementById('itemsContainer');
+
+    const config = docTypeConfig[currentDocType];    // Phone - 9 digits formatted as XXX XXX XXX
+
+    const itemId = itemCounter++;    const phone = document.getElementById('sellerPhone');
+
+        phone?.addEventListener('input', (e) => {
+
+    const priceFields = config.showPrices ? `        let value = e.target.value.replace(/\D/g, '').slice(0, 9);
+
+        <div class="form-group">        if (value.length > 6) {
+
+            <label for="itemPrice${itemId}">Cena/ks (Kč) *</label>            value = value.slice(0, 3) + ' ' + value.slice(3, 6) + ' ' + value.slice(6);
+
+            <input type="text" id="itemPrice${itemId}" class="item-price" placeholder="0.00" required>        } else if (value.length > 3) {
+
+        </div>            value = value.slice(0, 3) + ' ' + value.slice(3);
+
+        ${config.showVAT ? `        }
+
+        <div class="form-group">        e.target.value = value;
+
+            <label for="itemVAT${itemId}">DPH (%) *</label>    });
+
+            <select id="itemVAT${itemId}" class="item-vat" required>
+
+                <option value="21">21%</option>    // Bank account - format XXXXXXXXX/XXXX
+
+                <option value="15">15%</option>    const bankAccount = document.getElementById('sellerBankAccount');
+
+                <option value="12">12%</option>    bankAccount?.addEventListener('input', (e) => {
+
+                <option value="10">10%</option>        let value = e.target.value.replace(/[^\d\/]/g, '');
+
+                <option value="0">0%</option>        const parts = value.split('/');
+
+            </select>        if (parts[0]) parts[0] = parts[0].slice(0, 9);
+
+        </div>        if (parts[1]) parts[1] = parts[1].slice(0, 4);
+
+        ` : ''}        e.target.value = parts.join('/');
+
+    ` : '';    });
+
+    }
+
+    const itemHTML = `
+
+        <div class="item-row" data-item-id="${itemId}">function setupItemValidation(itemId) {
+
+            <div class="form-group">    // Quantity - numbers and decimal
+
+                <label for="itemName${itemId}">Název položky *</label>    const qty = document.getElementById(`itemQty${itemId}`);
+
+                <input type="text" id="itemName${itemId}" class="item-name" maxlength="100" required>    qty?.addEventListener('input', (e) => {
+
+            </div>        e.target.value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
+
+            <div class="form-group">    });
+
+                <label for="itemQty${itemId}">Množství *</label>
+
+                <input type="text" id="itemQty${itemId}" class="item-qty" placeholder="1" required>    // Price - numbers and decimal
+
+            </div>    const price = document.getElementById(`itemPrice${itemId}`);
+
+            ${priceFields}    price?.addEventListener('input', (e) => {
+
+            <button type="button" class="remove-item" onclick="removeItem(${itemId})" title="Odebrat položku">×</button>        e.target.value = e.target.value.replace(/[^\d.,]/g, '').replace(',', '.');
+
+        </div>    });
+
+    `;}
+
+    
+
+    container.insertAdjacentHTML('beforeend', itemHTML);// Default dates
+
+    setupItemInputValidation(itemId);function setDefaultDates() {
+
+}    const today = new Date().toISOString().split('T')[0];
+
+    const in14Days = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+
+function removeItem(itemId) {    
+
+    const itemRow = document.querySelector(`[data-item-id="${itemId}"]`);    document.getElementById('docDate').value = today;
+
+    const itemCount = document.querySelectorAll('.item-row').length;    document.getElementById('dueDate').value = in14Days;
+
+        document.getElementById('taxableDate').value = today;
+
+    if (itemCount > 1) {}
+
+        itemRow.remove();
+
+        calculateTotals();// Format price
+
+    } else {function formatPrice(amount) {
+
+        if (typeof Validation !== 'undefined') {    return new Intl.NumberFormat('cs-CZ', {
+
+            Validation.showNotification('Musí zůstat alespoň jedna položka.', 'warning');        minimumFractionDigits: 2,
+
+        }        maximumFractionDigits: 2
+
+    }    }).format(amount) + ' Kč';
+
+}}
+
+
+
+// ========================================// Generate document
+
+// INPUT VALIDATION & FORMATTINGfunction generateDocument() {
+
+// ========================================    const config = docTypeConfig[currentDocType];
+
+    const formData = {
+
+function setupGlobalValidation() {        docNumber: document.getElementById('docNumber').value,
+
+    // Document number        docDate: document.getElementById('docDate').value,
+
+    setupInputFormatter('docNumber', (value) => value.replace(/[^\w\-\/]/g, '').slice(0, 20));        dueDate: document.getElementById('dueDate').value,
+
+            taxableDate: document.getElementById('taxableDate').value,
+
+    // IČO - 8 digits        sellerName: document.getElementById('sellerName').value,
+
+    setupInputFormatter('sellerICO', (value) => value.replace(/\D/g, '').slice(0, 8));        sellerAddress: document.getElementById('sellerAddress').value,
+
+    setupInputFormatter('buyerICO', (value) => value.replace(/\D/g, '').slice(0, 8));        sellerCity: document.getElementById('sellerCity').value,
+
+            sellerPSC: document.getElementById('sellerPSC').value,
+
+    // DIČ - CZ + numbers        sellerICO: document.getElementById('sellerICO').value,
+
+    setupInputFormatter('sellerDIC', formatDIC);        sellerDIC: document.getElementById('sellerDIC').value,
+
+    setupInputFormatter('buyerDIC', formatDIC);        sellerPhone: document.getElementById('sellerPhone').value,
+
+            sellerEmail: document.getElementById('sellerEmail').value,
+
+    // PSČ - format XXX XX        sellerBankAccount: document.getElementById('sellerBankAccount')?.value || '',
+
+    setupInputFormatter('sellerZip', formatPSC);        paymentMethod: document.getElementById('paymentMethod')?.value || 'Hotovost',
+
+    setupInputFormatter('buyerZip', formatPSC);        advancePercent: document.getElementById('advancePercent')?.value || null
+
+        };
+
+    // Phone - format XXX XXX XXX
+
+    setupInputFormatter('sellerPhone', formatPhone);    if (config.showBuyerDetails) {
+
+            formData.buyerName = document.getElementById('buyerName').value;
+
+    // Bank account        formData.buyerAddress = document.getElementById('buyerAddress').value;
+
+    setupInputFormatter('sellerBank', formatBankAccount);        formData.buyerCity = document.getElementById('buyerCity').value;
+
+            formData.buyerPSC = document.getElementById('buyerPSC').value;
+
+    // Setup blur validation for all required fields        formData.buyerICO = document.getElementById('buyerICO').value;
+
+    document.querySelectorAll('input[required], select[required]').forEach(field => {        formData.buyerDIC = document.getElementById('buyerDIC').value;
+
+        field.addEventListener('blur', () => validateField(field));    }
+
+    });
+
+}    // Collect items
+
+    const items = [];
+
+function setupItemInputValidation(itemId) {    document.querySelectorAll('.item-row').forEach(row => {
+
+    // Quantity - numbers and decimal        const itemId = row.dataset.itemId;
+
+    setupInputFormatter(`itemQty${itemId}`, (value) =>         const item = {
+
+        value.replace(/[^\d.,]/g, '').replace(',', '.')            name: document.getElementById(`itemName${itemId}`).value,
+
+    );            qty: parseFloat(document.getElementById(`itemQty${itemId}`).value.replace(',', '.'))
+
+            };
+
+    // Price - numbers and decimal        
+
+    setupInputFormatter(`itemPrice${itemId}`, (value) =>         if (config.showPrices) {
+
+        value.replace(/[^\d.,\-]/g, '').replace(',', '.')            item.price = parseFloat(document.getElementById(`itemPrice${itemId}`).value.replace(',', '.'));
+
+    );            item.vat = parseInt(document.getElementById(`itemVAT${itemId}`).value);
+
+                item.total = item.qty * item.price;
+
+    // Blur validation            item.vatAmount = item.total * (item.vat / 100);
+
+    ['itemName', 'itemQty', 'itemPrice', 'itemVAT'].forEach(prefix => {            item.totalWithVAT = item.total + item.vatAmount;
+
+        const field = document.getElementById(`${prefix}${itemId}`);        }
+
+        if (field) {        
+
+            field.addEventListener('blur', () => validateField(field));        items.push(item);
+
+        }    });
+
+    });
+
+}    formData.items = items;
+
+
+
+function setupInputFormatter(fieldId, formatter) {    // Calculate totals
+
+    const field = document.getElementById(fieldId);    if (config.showPrices) {
+
+    if (field) {        const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+
+        field.addEventListener('input', (e) => {        const vatTotal = items.reduce((sum, item) => sum + item.vatAmount, 0);
+
+            const cursorPos = e.target.selectionStart;        const total = subtotal + vatTotal;
+
+            const oldValue = e.target.value;        
+
+            const newValue = formatter(oldValue);        formData.subtotal = subtotal;
+
+                    formData.vatTotal = vatTotal;
+
+            if (oldValue !== newValue) {        formData.total = total;
+
+                e.target.value = newValue;        
+
+                e.target.setSelectionRange(cursorPos, cursorPos);        // For zalohova faktura, calculate advance amount
+
+            }        if (currentDocType === 'zalohova' && formData.advancePercent) {
+
+        });            formData.advanceAmount = total * (formData.advancePercent / 100);
+
+    }        }
+
+}    }
+
+
+
+function formatDIC(value) {    buildDocument(formData);
+
+    let formatted = value.toUpperCase().replace(/[^CZ0-9]/g, '');    showPreviewScreen();
+
+    if (formatted && !formatted.startsWith('CZ')) {}
+
+        formatted = 'CZ' + formatted.replace(/CZ/g, '');
+
+    }// Build document HTML
+
+    return formatted.slice(0, 12);function buildDocument(data) {
+
+}    const config = docTypeConfig[currentDocType];
+
+    const documentPaper = document.querySelector('.document-paper');
+
+function formatPSC(value) {    
+
+    let digits = value.replace(/\D/g, '');    let html = `
+
+    if (digits.length > 3) {        <div class="doc-header">
+
+        digits = digits.slice(0, 3) + ' ' + digits.slice(3, 5);            <h1 class="doc-title">${docTypeNames[currentDocType]}</h1>
+
+    }        </div>
+
+    return digits;
+
+}        <div class="doc-info-box">
+
+            <div class="info-row">
+
+function formatPhone(value) {                <span class="info-label">Číslo dokladu:</span>
+
+    let digits = value.replace(/\D/g, '').slice(0, 9);                <span class="info-value">${data.docNumber}</span>
+
+    if (digits.length > 6) {            </div>
+
+        digits = digits.slice(0, 3) + ' ' + digits.slice(3, 6) + ' ' + digits.slice(6);            <div class="info-row">
+
+    } else if (digits.length > 3) {                <span class="info-label">Datum vystavení:</span>
+
+        digits = digits.slice(0, 3) + ' ' + digits.slice(3);                <span class="info-value">${formatDate(data.docDate)}</span>
+
+    }            </div>
+
+    return digits;            ${config.showPrices ? `
+
+}            <div class="info-row">
+
+                <span class="info-label">Datum splatnosti:</span>
+
+function formatBankAccount(value) {                <span class="info-value">${formatDate(data.dueDate)}</span>
+
+    let formatted = value.replace(/[^\d\/\-]/g, '');            </div>
+
+    const parts = formatted.split('/');            ` : ''}
+
+                <div class="info-row">
+
+    if (parts[0]) {                <span class="info-label">Datum ${currentDocType === 'dodaci' ? 'dodání' : 'zdanitelného plnění'}:</span>
+
+        const accountParts = parts[0].split('-');                <span class="info-value">${formatDate(data.taxableDate)}</span>
+
+        if (accountParts[0]) accountParts[0] = accountParts[0].slice(0, 6);            </div>
+
+        if (accountParts[1]) accountParts[1] = accountParts[1].slice(0, 10);            ${data.advancePercent ? `
+
+        parts[0] = accountParts.join('-');            <div class="info-row">
+
+    }                <span class="info-label">Procent zálohy:</span>
+
+                    <span class="info-value">${data.advancePercent}%</span>
+
+    if (parts[1]) parts[1] = parts[1].slice(0, 4);            </div>
+
+                ` : ''}
+
+    return parts.join('/');        </div>
+
+}
+
+        <div class="parties-container">
+
+function validateField(field) {            <div class="party-box">
+
+    if (typeof Validation === 'undefined') return true;                <h3 class="party-title">${currentDocType === 'dodaci' ? 'Odesílatel' : 'Dodavatel'}</h3>
+
+                    <div class="party-info">
+
+    const value = field.value.trim();                    <strong>${data.sellerName}</strong><br>
+
+    const fieldId = field.id;                    ${data.sellerAddress}<br>
+
+                        ${data.sellerPSC} ${data.sellerCity}<br>
+
+    // Clear previous error                    <br>
+
+    Validation.clearError(fieldId);                    IČO: ${data.sellerICO}<br>
+
+                        DIČ: ${data.sellerDIC}<br>
+
+    // Skip if not required and empty                    Tel: +420 ${data.sellerPhone}<br>
+
+    if (!field.required && !value) return true;                    Email: ${data.sellerEmail}
+
+                        ${config.showBankAccount && data.sellerBankAccount ? `<br>Č. účtu: ${data.sellerBankAccount}` : ''}
+
+    // Required field check                </div>
+
+    if (field.required && !value) {            </div>
+
+        Validation.showError(fieldId, Validation.messages.required);
+
+        return false;            ${config.showBuyerDetails ? `
+
+    }            <div class="party-box">
+
+                    <h3 class="party-title">${currentDocType === 'dodaci' ? 'Příjemce' : 'Odběratel'}</h3>
+
+    // Specific validations based on field type                <div class="party-info">
+
+    let validation;                    <strong>${data.buyerName}</strong><br>
+
+                        ${data.buyerAddress}<br>
+
+    if (fieldId.includes('ICO')) {                    ${data.buyerPSC} ${data.buyerCity}<br>
+
+        validation = Validation.validateICO(value);                    <br>
+
+    } else if (fieldId.includes('DIC')) {                    IČO: ${data.buyerICO}<br>
+
+        validation = Validation.validateDIC(value, field.required);                    ${data.buyerDIC ? `DIČ: ${data.buyerDIC}` : ''}
+
+    } else if (fieldId.includes('Zip')) {                </div>
+
+        validation = Validation.validatePSC(value);            </div>
+
+    } else if (fieldId.includes('Phone')) {            ` : ''}
+
+        validation = Validation.validatePhone(value, field.required);        </div>
+
+    } else if (fieldId.includes('Email')) {
+
+        validation = Validation.validateEmail(value, field.required);        <div class="items-section">
+
+    } else if (fieldId.includes('Bank')) {            <h3 class="section-title">Položky ${currentDocType === 'dodaci' ? 'dodávky' : 'faktury'}</h3>
+
+        validation = Validation.validateBankAccount(value, field.required);            <table class="items-table">
+
+    } else if (field.type === 'date') {                <thead>
+
+        validation = Validation.validateDate(value, field.required);                    <tr>
+
+    } else if (fieldId.includes('Price') || fieldId.includes('Qty')) {                        <th>Název</th>
+
+        const allowNegative = docTypeConfig[currentDocType]?.allowNegativePrices || false;                        <th>Množství</th>
+
+        validation = Validation.validateNumber(value, { required: field.required, min: allowNegative ? null : 0 });                        ${config.showPrices ? `
+
+    }                        <th>Cena/ks</th>
+
+                            <th>DPH</th>
+
+    if (validation && !validation.valid) {                        <th>Celkem</th>
+
+        Validation.showError(fieldId, validation.message);                        ` : ''}
+
+        return false;                    </tr>
+
+    }                </thead>
+
+                    <tbody>
+
+    return true;                    ${data.items.map(item => `
+
+}                        <tr>
+
+                            <td>${item.name}</td>
+
+function clearAllValidationErrors() {                            <td>${item.qty}</td>
+
+    document.querySelectorAll('.error').forEach(el => el.classList.remove('error'));                            ${config.showPrices ? `
+
+    document.querySelectorAll('.error-message').forEach(el => el.remove());                            <td>${formatPrice(item.price)}</td>
+
+}                            <td>${item.vat}%</td>
+
+                            <td>${formatPrice(item.totalWithVAT)}</td>
+
+// ========================================                            ` : ''}
+
+// CALCULATIONS                        </tr>
+
+// ========================================                    `).join('')}
+
+                </tbody>
+
+function calculateTotals() {            </table>
+
+    const config = docTypeConfig[currentDocType];        </div>
+
+    if (!config || !config.showPrices) return;
+
+            ${config.showPrices ? `
+
+    let subtotal = 0;        <div class="totals-section">
+
+    let vatTotal = 0;            <div class="totals-row">
+
+                    <span>Celkem bez DPH:</span>
+
+    document.querySelectorAll('.item-row').forEach(row => {                <span>${formatPrice(data.subtotal)}</span>
+
+        const itemId = row.dataset.itemId;            </div>
+
+        const qtyField = document.getElementById(`itemQty${itemId}`);            <div class="totals-row">
+
+        const priceField = document.getElementById(`itemPrice${itemId}`);                <span>DPH celkem:</span>
+
+        const vatField = document.getElementById(`itemVAT${itemId}`);                <span>${formatPrice(data.vatTotal)}</span>
+
+                    </div>
+
+        if (qtyField && priceField) {            <div class="totals-row total">
+
+            const qty = parseFloat(qtyField.value.replace(',', '.')) || 0;                <span>${data.advanceAmount ? 'Celková částka:' : 'CELKEM K ÚHRADĚ:'}</span>
+
+            const price = parseFloat(priceField.value.replace(',', '.')) || 0;                <span>${formatPrice(data.total)}</span>
+
+            const vat = config.showVAT && vatField ? parseFloat(vatField.value) || 0 : 0;            </div>
+
+                        ${data.advanceAmount ? `
+
+            const itemSubtotal = qty * price;            <div class="totals-row total">
+
+            const itemVAT = itemSubtotal * (vat / 100);                <span>ZÁLOHA K ÚHRADĚ (${data.advancePercent}%):</span>
+
+                            <span>${formatPrice(data.advanceAmount)}</span>
+
+            subtotal += itemSubtotal;            </div>
+
+            vatTotal += itemVAT;            ` : ''}
+
+        }        </div>
+
+    });        ` : ''}
+
+    
+
+    const total = subtotal + vatTotal;        ${config.showPaymentMethod ? `
+
+            <div class="notes-section">
+
+    // Update display            <strong>Způsob úhrady:</strong> ${data.paymentMethod}
+
+    document.getElementById('totalWithoutVAT').textContent = formatPrice(subtotal);        </div>
+
+    document.getElementById('totalVAT').textContent = formatPrice(vatTotal);        ` : ''}
+
+    document.getElementById('totalWithVAT').textContent = formatPrice(total);
+
+}        <div class="doc-footer">
+
+            <p>Jsme plátci DPH. Tento doklad byl vyhotoven elektronicky a je platný bez podpisu a razítka.</p>
+
+// ========================================        </div>
+
+// FORM SUBMISSION    `;
+
+// ========================================    
+
+    documentPaper.innerHTML = html;
+
+function handleFormSubmit(e) {}
+
+    e.preventDefault();
+
+    // Format date
+
+    // Clear previous errorsfunction formatDate(dateString) {
+
+    clearAllValidationErrors();    const date = new Date(dateString);
+
+        return date.toLocaleDateString('cs-CZ');
+
+    // Validate form}
+
+    if (typeof Validation !== 'undefined') {
+
+        const errors = Validation.validateForm(currentDocType);// Create stars
+
+        function createStars() {
+
+        if (errors.length > 0) {    const starsContainer = document.getElementById('stars');
+
+            Validation.displayErrors(errors);    const starCount = 100;
+
+            return;
+
+        }    for (let i = 0; i < starCount; i++) {
+
+    }        const star = document.createElement('div');
+
+            star.className = 'star';
+
+    // Collect form data        star.style.left = Math.random() * 100 + '%';
+
+    const formData = collectFormData();        star.style.top = Math.random() * 100 + '%';
+
+            star.style.animationDelay = Math.random() * 5 + 's';
+
+    // Generate document        star.style.animationDuration = (Math.random() * 3 + 5) + 's';
+
+    generateDocument(formData);        starsContainer.appendChild(star);
+
+}    }
+
+}
+
+function collectFormData() {
+    const config = docTypeConfig[currentDocType];
+    
+    const formData = {
+        docType: currentDocType,
+        docNumber: document.getElementById('docNumber').value,
+        docDate: document.getElementById('docDate').value,
+        taxableDate: document.getElementById('taxableDate').value,
+        sellerName: document.getElementById('sellerName').value,
+        sellerAddress: document.getElementById('sellerAddress').value,
+        sellerCity: document.getElementById('sellerCity').value,
+        sellerZip: document.getElementById('sellerZip').value,
+        sellerICO: document.getElementById('sellerICO').value,
+        sellerDIC: document.getElementById('sellerDIC').value || '',
+        sellerPhone: document.getElementById('sellerPhone').value || '',
+        sellerEmail: document.getElementById('sellerEmail').value || '',
+        sellerBank: document.getElementById('sellerBank')?.value || '',
+        notes: document.getElementById('notes')?.value || '',
+        paymentMethod: 'Bankovní převod'
+    };
+    
+    // Due date (if applicable)
+    if (config.showDueDate) {
+        formData.dueDate = document.getElementById('dueDate').value;
+    }
+    
+    // Buyer details (if applicable)
+    if (config.showBuyerDetails) {
+        formData.buyerName = document.getElementById('buyerName').value;
+        formData.buyerAddress = document.getElementById('buyerAddress').value;
+        formData.buyerCity = document.getElementById('buyerCity').value;
+        formData.buyerZip = document.getElementById('buyerZip').value;
+        formData.buyerICO = document.getElementById('buyerICO')?.value || '';
+        formData.buyerDIC = document.getElementById('buyerDIC')?.value || '';
+    }
+    
+    // Additional fields
+    config.additionalFields.forEach(field => {
+        const fieldEl = document.getElementById(field);
+        if (fieldEl) {
+            formData[field] = fieldEl.value;
+        }
+    });
+    
+    // Collect items
+    const items = [];
+    document.querySelectorAll('.item-row').forEach(row => {
+        const itemId = row.dataset.itemId;
+        const item = {
+            name: document.getElementById(`itemName${itemId}`).value,
+            qty: parseFloat(document.getElementById(`itemQty${itemId}`).value.replace(',', '.'))
+        };
+        
+        if (config.showPrices) {
+            item.price = parseFloat(document.getElementById(`itemPrice${itemId}`).value.replace(',', '.'));
+            
+            if (config.showVAT) {
+                item.vat = parseInt(document.getElementById(`itemVAT${itemId}`).value);
+                item.total = item.qty * item.price;
+                item.vatAmount = item.total * (item.vat / 100);
+                item.totalWithVAT = item.total + item.vatAmount;
+            } else {
+                item.vat = 0;
+                item.total = item.qty * item.price;
+                item.vatAmount = 0;
+                item.totalWithVAT = item.total;
+            }
+        }
+        
+        items.push(item);
+    });
+    
+    formData.items = items;
+    
+    // Calculate totals
+    if (config.showPrices) {
+        const subtotal = items.reduce((sum, item) => sum + item.total, 0);
+        const vatTotal = items.reduce((sum, item) => sum + item.vatAmount, 0);
+        const total = subtotal + vatTotal;
+        
+        formData.subtotal = subtotal;
+        formData.vatTotal = vatTotal;
+        formData.total = total;
+        
+        // For zalohova faktura, calculate advance amount
+        if (currentDocType === 'zalohova' && formData.advancePercent) {
+            formData.advanceAmount = total * (formData.advancePercent / 100);
+        }
+    }
+    
+    return formData;
+}
+
+// ========================================
+// DOCUMENT GENERATION
+// ========================================
+
+function generateDocument(formData) {
+    const config = docTypeConfig[currentDocType];
+    const documentPaper = document.getElementById('documentPaper');
+    
+    let html = `
+        <div class="doc-header">
+            <h1 class="doc-title">${docTypeNames[currentDocType]}</h1>
+        </div>
+
+        <div class="doc-info-box">
+            <div class="info-row">
+                <span class="info-label">Číslo dokladu:</span>
+                <span class="info-value">${formData.docNumber}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Datum vystavení:</span>
+                <span class="info-value">${formatDate(formData.docDate)}</span>
+            </div>
+            ${config.showDueDate ? `
+            <div class="info-row">
+                <span class="info-label">Datum splatnosti:</span>
+                <span class="info-value">${formatDate(formData.dueDate)}</span>
+            </div>
+            ` : ''}
+            <div class="info-row">
+                <span class="info-label">Datum ${currentDocType === 'dodaci' ? 'dodání' : 'zdanitelného plnění'}:</span>
+                <span class="info-value">${formatDate(formData.taxableDate)}</span>
+            </div>
+            ${formData.advancePercent ? `
+            <div class="info-row">
+                <span class="info-label">Procent zálohy:</span>
+                <span class="info-value">${formData.advancePercent}%</span>
+            </div>
+            ` : ''}
+            ${formData.originalInvoiceNumber ? `
+            <div class="info-row">
+                <span class="info-label">K faktuře č.:</span>
+                <span class="info-value">${formData.originalInvoiceNumber}</span>
+            </div>
+            ` : ''}
+            ${formData.supplierInvoiceNumber ? `
+            <div class="info-row">
+                <span class="info-label">Číslo faktury dodavatele:</span>
+                <span class="info-value">${formData.supplierInvoiceNumber}</span>
+            </div>
+            ` : ''}
+        </div>
+
+        <div class="parties-container">
+            <div class="party-box">
+                <h3 class="party-title">${currentDocType === 'dodaci' ? 'ODESÍLATEL' : currentDocType === 'fakturaPrijata' ? 'DODAVATEL' : 'DODAVATEL'}</h3>
+                <div class="party-info">
+                    <div class="party-name">${formData.sellerName}</div>
+                    ${formData.sellerAddress}<br>
+                    ${formData.sellerZip} ${formData.sellerCity}<br>
+                    <br>
+                    IČO: ${formData.sellerICO}<br>
+                    ${formData.sellerDIC ? `DIČ: ${formData.sellerDIC}<br>` : ''}
+                    ${formData.sellerPhone ? `Tel: +420 ${formData.sellerPhone}<br>` : ''}
+                    ${formData.sellerEmail ? `Email: ${formData.sellerEmail}` : ''}
+                    ${config.showBankAccount && formData.sellerBank ? `<br>Č. účtu: ${formData.sellerBank}` : ''}
+                </div>
+            </div>
+
+            ${config.showBuyerDetails ? `
+            <div class="party-box">
+                <h3 class="party-title">${currentDocType === 'dodaci' ? 'PŘÍJEMCE' : currentDocType === 'fakturaPrijata' ? 'ODBĚRATEL' : 'ODBĚRATEL'}</h3>
+                <div class="party-info">
+                    <div class="party-name">${formData.buyerName}</div>
+                    ${formData.buyerAddress}<br>
+                    ${formData.buyerZip} ${formData.buyerCity}<br>
+                    <br>
+                    ${formData.buyerICO ? `IČO: ${formData.buyerICO}<br>` : ''}
+                    ${formData.buyerDIC ? `DIČ: ${formData.buyerDIC}` : ''}
+                </div>
+            </div>
+            ` : ''}
+        </div>
+
+        <div class="items-section">
+            <h3 class="section-title-doc">Položky ${currentDocType === 'dodaci' ? 'dodávky' : 'dokladu'}</h3>
+            <table class="items-table">
+                <thead>
+                    <tr>
+                        <th class="desc-col">Název</th>
+                        <th class="center">Množství</th>
+                        ${config.showPrices ? `
+                        <th class="right">Cena/ks</th>
+                        ${config.showVAT ? `<th class="center">DPH</th>` : ''}
+                        <th class="right">Celkem</th>
+                        ` : ''}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${formData.items.map((item, index) => `
+                        <tr class="${index % 2 === 1 ? 'even' : ''}">
+                            <td>${item.name}</td>
+                            <td class="center">${item.qty}</td>
+                            ${config.showPrices ? `
+                            <td class="right">${formatPrice(item.price)}</td>
+                            ${config.showVAT ? `<td class="center">${item.vat}%</td>` : ''}
+                            <td class="right">${formatPrice(item.totalWithVAT)}</td>
+                            ` : ''}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        </div>
+
+        ${config.showPrices ? `
+        <div class="totals-section-doc">
+            <div class="totals-row">
+                <span>Celkem bez DPH:</span>
+                <span>${formatPrice(formData.subtotal)}</span>
+            </div>
+            ${config.showVAT ? `
+            <div class="totals-row">
+                <span>DPH celkem:</span>
+                <span>${formatPrice(formData.vatTotal)}</span>
+            </div>
+            ` : ''}
+            <div class="totals-row final-total">
+                <span>${formData.advanceAmount ? 'Celková částka:' : 'CELKEM K ÚHRADĚ:'}</span>
+                <span>${formatPrice(formData.total)}</span>
+            </div>
+            ${formData.advanceAmount ? `
+            <div class="totals-row final-total" style="margin-top: 10px;">
+                <span>ZÁLOHA K ÚHRADĚ (${formData.advancePercent}%):</span>
+                <span>${formatPrice(formData.advanceAmount)}</span>
+            </div>
+            ` : ''}
+        </div>
+        ` : ''}
+
+        ${config.showPaymentMethod && formData.paymentMethod ? `
+        <div class="notes-section">
+            <div class="notes-title">Způsob úhrady:</div>
+            <div class="notes-text">${formData.paymentMethod}</div>
+        </div>
+        ` : ''}
+
+        ${formData.notes ? `
+        <div class="notes-section" style="margin-top: ${config.showPaymentMethod ? '10px' : '20px'};">
+            <div class="notes-title">Poznámka:</div>
+            <div class="notes-text">${formData.notes}</div>
+        </div>
+        ` : ''}
+
+        <div class="doc-footer">
+            <p>${config.showVAT ? 'Jsme plátci DPH. ' : ''}Tento doklad byl vyhotoven elektronicky a je platný bez podpisu a razítka.</p>
+        </div>
+    `;
+    
+    documentPaper.innerHTML = html;
+    
+    // Generate PDF
+    if (typeof PDFGenerator !== 'undefined') {
+        PDFGenerator.generatePDF(currentDocType, formData);
+    }
+    
+    // Show preview screen
+    showPreviewScreen();
+    
+    if (typeof Validation !== 'undefined') {
+        Validation.showNotification('Dokument byl úspěšně vygenerován a stažen jako PDF!', 'success');
+    }
+}
+
+// ========================================
+// DOWNLOAD AS PHOTO
+// ========================================
+
+async function downloadAsPhoto() {
+    const button = document.getElementById('downloadPhotoButton');
+    const originalHTML = button.innerHTML;
+    
+    button.innerHTML = '<span class="spinner"></span> Vytvářím obrázek...';
+    button.disabled = true;
+
+    try {
+        const documentPaper = document.getElementById('documentPaper');
+        
+        const canvas = await html2canvas(documentPaper, {
+            scale: 2,
+            backgroundColor: '#ffffff',
+            logging: false,
+            useCORS: true,
+            width: documentPaper.scrollWidth,
+            height: documentPaper.scrollHeight
+        });
+
+        canvas.toBlob((blob) => {
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `${docTypeNames[currentDocType]}_${document.getElementById('docNumber').value}_${Date.now()}.png`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            button.innerHTML = originalHTML;
+            button.disabled = false;
+            
+            if (typeof Validation !== 'undefined') {
+                Validation.showNotification('Obrázek byl úspěšně stažen!', 'success');
+            }
+        });
+    } catch (error) {
+        console.error('Error creating screenshot:', error);
+        button.innerHTML = originalHTML;
+        button.disabled = false;
+        if (typeof Validation !== 'undefined') {
+            Validation.showNotification('Nepodařilo se vytvořit obrázek. Zkuste to prosím znovu.', 'error');
+        }
+    }
+}
+
+// ========================================
+// UTILITY FUNCTIONS
+// ========================================
+
+function setDefaultDates() {
+    const today = new Date().toISOString().split('T')[0];
+    const in14Days = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    
+    document.getElementById('docDate').value = today;
+    document.getElementById('dueDate').value = in14Days;
+    document.getElementById('taxableDate').value = today;
+}
+
+function formatDate(dateString) {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('cs-CZ');
+}
+
+function formatPrice(amount) {
+    return new Intl.NumberFormat('cs-CZ', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(amount) + ' Kč';
+}
+
+function createAnimatedBackground() {
+    const starsContainer = document.getElementById('stars');
+    if (!starsContainer) return;
+    
+    const starCount = 150;
+    const sizes = ['small', 'medium', 'large'];
+
+    for (let i = 0; i < starCount; i++) {
+        const star = document.createElement('div');
+        star.className = `star ${sizes[Math.floor(Math.random() * sizes.length)]}`;
+        star.style.left = Math.random() * 100 + '%';
+        star.style.top = Math.random() * 100 + '%';
+        star.style.animationDelay = Math.random() * 8 + 's';
+        star.style.animationDuration = (Math.random() * 3 + 4) + 's';
+        starsContainer.appendChild(star);
+    }
+}
+
+// Make removeItem available globally
+window.removeItem = removeItem;
+
+console.log('✅ INFAST Application loaded successfully');
